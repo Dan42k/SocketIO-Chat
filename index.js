@@ -31,6 +31,7 @@ io.sockets.on('connection', function (socket) {
     socket.on('newUser', function(data) {
     	var newUser = data;
     	var date = new Date();
+
     	if (data in users){
     		// On informe l'utilisateur que ce pseudonyme est déjà utilisé
     		socket.emit('duplicate');
@@ -39,13 +40,21 @@ io.sockets.on('connection', function (socket) {
 	    	socket.set('pseudo', newUser);
 	    	socket.set('date', new Date());
 
-	    	var demain=new Date();
-			demain.setTime(demain.getTime() + 24 * 3600 * 1000);
+			var time    = new Date();
+			var hours   = time.getHours();
+
+			var minutes = time.getMinutes();
+			minutes     = ((minutes < 10) ? "0" : "") + minutes;
+
+			var seconds = time.getSeconds();
+			seconds     = ((seconds < 10) ? "0" : "") + seconds;
+
+			var clock   = hours + ":" + minutes + ":" + seconds;
 
 	    	socket.broadcast.emit('newUser', newUser);
 	    	var object = {
 	    		pseudo: newUser,
-	    		date: demain
+	    		date: clock
 	    	};
 
 	    	socket.pseudo = newUser;
@@ -62,14 +71,13 @@ io.sockets.on('connection', function (socket) {
 	    	//users[date] = socket;
 
 	    	console.log(
-	    		 Object.keys(users)
+	    		 Object.keys(users),
 	    	);
 	    	//io.sockets.emit('users_list', Object.keys(users));
 	    	io.sockets.emit('users_list', {
 	    									users: Object.keys(users),
 	    									datas: usersData
 	    					});
-	    	
     	}
 	}); 
 
@@ -84,7 +92,6 @@ io.sockets.on('connection', function (socket) {
 
 
 	var hs = socket.handshake;
-	//console.log(hs);
 
 	socket.on('disconnect', function(){
 		
@@ -97,7 +104,6 @@ io.sockets.on('connection', function (socket) {
 	}); 
 
 	socket.on('private_message', function(data) {
-		console.log(users[data.to]);
 		if(!users[data.to]) return;
 		users[data.to].emit('send_message', data);
 	});
@@ -108,5 +114,4 @@ io.sockets.on('connection', function (socket) {
 	});
 }); 
 
- 
 console.log("Listening on port " + port);

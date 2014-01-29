@@ -1,7 +1,7 @@
 window.onload = function() {
  
     var messages = [];
-    var socket = io.connect('http://192.168.1.79:3700');
+    var socket = io.connect('http://172.16.211.104:3700');
     var field = document.querySelector(".field");
     var sendButton = document.querySelector(".send");
     var privateButton = document.querySelector(".private");
@@ -19,10 +19,13 @@ window.onload = function() {
            messages.push(data);
             var html = '';
             var username;
+            var hours;
             for(var i = 0; i < messages.length; i++) {
                 username =  (messages[i].username ? messages[i].username : 'Server');
+                hours =  (messages[i].hours ? ' (' + messages[i].hours + ')' : '');
+
                 html += '<b>' + username + ': </b>';
-                html += messages[i].message + '<br />';
+                html += messages[i].message + hours + '<br />';
             }
             content.innerHTML = html;
         } else {
@@ -72,7 +75,8 @@ window.onload = function() {
 
         for(var i = 0; i < data.users.length; i++) {
             var pseudo =  (data.users[i] == newUser ? data.users[i] + ' (You)' : data.users[i]);
-            select.options.add(new Option(pseudo, pseudo));
+            var value =  (data.users[i] == newUser ? data.users[i] : data.users[i]);
+            select.options.add(new Option(pseudo, value));
         }
     });
 
@@ -90,10 +94,25 @@ window.onload = function() {
     });
 
     socket.on('send_message', function(data){
-        console.log(data.to, newUser);
+        // console.log(data.to, newUser);
        // if(data.to == newUser) {
             console.log('PRIVATE ' + data.content);
         //}
+        if (Notification && Notification.permission === "granted") {
+            displayNotification('Message privé de ' + data.from + ' à ' + data.hours, data.content, data.content);
+        } 
+        else if (Notification && Notification.permission !== "denied") {
+            Notification.requestPermission(function (status) {
+                if (Notification.permission !== status) {
+                  Notification.permission = status;
+                }
+
+                // If the user said okay
+                if (status === "granted") {
+                    displayNotification('Message privé de ' + data.from + ' à ' + data.hours, data.content, data.content);
+                }
+            });
+        } 
     });
 
     socket.on('user_leave', function(data){
@@ -127,10 +146,23 @@ window.onload = function() {
         var text = field.value;
         var privateMessageReceiver = usersSelect.options[usersSelect.selectedIndex].value;
 
+        var demain  = new Date();
+        var time    = new Date();
+        var hours   = time.getHours();
+
+        var minutes = time.getMinutes();
+        minutes     = ((minutes < 10) ? "0" : "") + minutes;
+
+        var seconds = time.getSeconds();
+        seconds     = ((seconds < 10) ? "0" : "") + seconds;
+
+        var clock   = hours + ":" + minutes + ":" + seconds;
+
+
         if (privateMessageReceiver) {
-            socket.emit('private_message', { to: privateMessageReceiver, content: text, from: newUser });
+            socket.emit('private_message', { to: privateMessageReceiver, content: text, from: newUser, hours: clock });
         } else {
-            socket.emit('send', { message: text, username: newUser });
+            socket.emit('send', { message: text, username: newUser, hours: clock });
         }
         //var text = field.value;
         //socket.emit('private_message', { to: 'doge', content: 'master', from: newUser });
@@ -142,6 +174,7 @@ window.onload = function() {
 /*        socket.get('date', function (error, data) {
            console.log(data);
         });*/
+        field.value = '';
     };
 }
 
