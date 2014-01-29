@@ -99,7 +99,7 @@ window.onload = function() {
             console.log('PRIVATE ' + data.content);
         //}
         if (Notification && Notification.permission === "granted") {
-            displayNotification('Message privé de ' + data.from + ' à ' + data.hours, data.content, data.content);
+            displayNotification('Private message from ' + data.from + ' at ' + data.hours, data.content, data.content);
         } 
         else if (Notification && Notification.permission !== "denied") {
             Notification.requestPermission(function (status) {
@@ -109,7 +109,7 @@ window.onload = function() {
 
                 // If the user said okay
                 if (status === "granted") {
-                    displayNotification('Message privé de ' + data.from + ' à ' + data.hours, data.content, data.content);
+                    displayNotification('Private message from ' + data.from + ' at ' + data.hours, data.content, data.content);
                 }
             });
         } 
