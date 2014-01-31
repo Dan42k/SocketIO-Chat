@@ -18,15 +18,39 @@ app.use(express.static(__dirname + '/public'));
 
 var users = {};
 var usersData = [];
+
+
+var mongoose = require('mongoose');
+mongoose.connect('mongodb://localhost/chat');
+
+var chatSchema = mongoose.Schema({
+    username: String,
+    message: String,
+    createdAt: {
+    	type: Date, default: Date.now 
+    }
+});
+
+var Message = mongoose.model('Message', chatSchema);
  
 var io = require('socket.io').listen(app.listen(port));
 io.sockets.on('connection', function (socket) {
 
+	socket.on('old', function () {
+		Message.find({}).limit(7).exec( function(err, data){
+	    		if(err) throw err;
+	    		socket.emit('load_old_messages', data);
+	    });
+    });
+
     socket.emit('message', { message: 'welcome to the chat' });
 
     socket.on('send', function (data) {
+    	var newMessage = new Message({ username: data.username, message: data.message  });
+    	newMessage.save();
+    	//console.log(data);
         io.sockets.emit('message', data);
-    });
+    }); 
 
     socket.on('newUser', function(data) {
     	var newUser = data;
@@ -71,7 +95,7 @@ io.sockets.on('connection', function (socket) {
 	    	//users[date] = socket;
 
 	    	console.log(
-	    		 Object.keys(users),
+	    		 Object.keys(users)
 	    	);
 	    	//io.sockets.emit('users_list', Object.keys(users));
 	    	io.sockets.emit('users_list', {
@@ -91,7 +115,7 @@ io.sockets.on('connection', function (socket) {
 	});  
 
 
-	var hs = socket.handshake;
+	var hs = socket.handshake; 
 
 	socket.on('disconnect', function(){
 		
@@ -112,6 +136,8 @@ io.sockets.on('connection', function (socket) {
 		if(!socket.pseudo) return;
 		socket.emit('are', socket.pseudo);
 	});
+
+	
 }); 
 
 console.log("Listening on port " + port);

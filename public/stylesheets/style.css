@@ -34,3 +34,8 @@ section#users {
 	width: 200px;
 	display: inline-block;
 }
+
+.send, .input-group{
+	margin-top: 7px;
+}
+
