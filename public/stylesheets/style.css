@@ -39,3 +39,7 @@ section#users {
 	margin-top: 7px;
 }
 
+.msg-old {
+	content: gray;
+}
+

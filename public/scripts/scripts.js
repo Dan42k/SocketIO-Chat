@@ -27,10 +27,11 @@ window.onload = function() {
                 username =  (messages[i].username ? messages[i].username : 'Server');
                 hours =  (messages[i].hours ? ' (' + messages[i].hours + ')' : '');
 
-                html += '<b>' + username + ': </b>';
-                html += messages[i].message + hours + '<br />';
+                //html += '<b>' + username + ': </b>';
+               // html += messages[i].message + hours + '<br />';
+                displayMsg(data, false);
             }
-            content.innerHTML = html;
+            //content.innerHTML = html;
         } else {
             console.log("There is a problem:", data);
         }
@@ -48,7 +49,7 @@ window.onload = function() {
 
                 /*html += '<b>' + username + ': </b>';
                 html += data[i].message + hours + '<br />';*/
-                displayMsg(data[i]);
+                displayMsg(data[i], true);
             }
             //content.innerHTML = html;
         
@@ -107,7 +108,6 @@ window.onload = function() {
     socket.on('change_name_enabled', function(name){
         newUser = name;
         console.log('changed', name);
-
     });
 
     socket.on('are', function(data){
@@ -140,7 +140,6 @@ window.onload = function() {
     });
 
     socket.on('user_leave', function(data){
-        //console.log(data);
           if (Notification && Notification.permission === "granted") {
                 displayNotification("Déconnexion", data.username + ' est parti', 'data.username');
             } 
@@ -202,10 +201,12 @@ window.onload = function() {
         field.value = '';
     };
 
-    displayMsg("data");
-    function displayMsg(data){
-        console.log(data);
-       content.innerHTML += '<span class="msg"><b>' + data.username + ': </b>' + data.message + "</span><br/>";
+    function displayMsg(data, isOld){
+        if (isOld === true) {
+            content.innerHTML += '<span class="msg-old"><b>' + data.username + ': </b>' + data.message + "</span><br/>";
+        } else {
+            content.innerHTML += '<span class="msg"><b>' + data.username + ': </b>' + data.message + "</span><br/>";
+        }
     }
 }
 
