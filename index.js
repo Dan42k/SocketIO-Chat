@@ -1,11 +1,12 @@
 var express = require("express");
-var app = express();
+var markdown = require( "markdown" ).markdown;
+
 var port = 3700;
 
-var markdown = require( "markdown" ).markdown;
- 
+var app = express();
 app.set('views', __dirname + '/tpl');
 app.set('view engine', "jade");
+app.locals.pretty = true;
 app.engine('jade', require('jade').__express);
 
 app.get("/", function(req, res){
@@ -32,7 +33,6 @@ var chatSchema = mongoose.Schema({
     	type: Date, default: Date.now 
     }
 });
-
 
 var Message = mongoose.model('Message', chatSchema);
  

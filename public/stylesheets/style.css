@@ -20,6 +20,16 @@ section#content {
 }
 
 section#content img {
+	
+	max-width: 90%;
+	height: 10px;
+	cursor: pointer;
+	-webkit-transition: all .7s sease-in;
+    transition: all .7s ease-in;
+}
+
+section#content img.active {
+	height: 100%;
 	margin-left: 15px;
 }
 
@@ -69,18 +79,28 @@ hr:before {
     color: rgb(4, 139, 154);
 }
 
-span[class^="msg-"] p {
+span[class^="msg"] p, 
+span[class^="msg"] h1,
+span[class^="msg"] h1,
+span[class^="msg"] h2,
+span[class^="msg"] h3,
+span[class^="msg"] h4,
+span[class^="msg"] h5,
+span[class^="msg"] h6
+{
 	display: inline;
 }
 
 .row{
 	transform: scale(0.7, 0.7);
+	-webkit-transform: scale(0.7, 0.7);
 	opacity: .5;
-	-webkit-transition: all .3 sease-in;
-    transition: all .3s ease-in;
+	-webkit-transition: all .1s sease-in;
+    transition: all .1s ease-in;
 }
 
 .row.active {
 	opacity: 1;
 	transform: scale(1, 1);
+	-webkit-transform: scale(1, 1);
 }

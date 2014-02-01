@@ -1,4 +1,19 @@
 window.onload = function() {
+
+    var isActive;
+
+    window.onfocus = function () { 
+      isActive = true; 
+    }; 
+
+    window.onblur = function () { 
+      isActive = false; 
+    }; 
+
+    // test
+    setInterval(function () { 
+      //console.log(isActive ? 'active' : 'inactive');
+    }, 1000);
  
     var messages = [];
     var socket = io.connect('http://127.0.0.1:3700');
@@ -6,25 +21,36 @@ window.onload = function() {
     var sendButton = document.querySelector(".send");
     var privateButton = document.querySelector(".private");
     var section = document.querySelector("section.row");
+    
     var content = document.getElementById("content");
 
     var usersList = document.getElementById("users-list");
-
     var usersSelect = document.querySelector(".users-select");
 
+    var audioElement = document.querySelector("audio");
+    
     var newUser = prompt('Choose your username');
     while(newUser == undefined) {
         newUser = prompt('Choose your username');
     }
 
+
     section.className = section.className + " active";
     socket.emit('newUser', newUser);
 
+    // New user ask for previous messages
     socket.emit('old');
  
     socket.on('message', function (data) {
-        //console.log(data);
+        //console.log(isActive ? 'active' : 'inactive'); 
         if(data) {
+            console.log(isActive);
+            //All users except sender get a sound notification
+            if (data.username && data.username !== newUser && !isActive) {
+                audioElement.play();
+                audioElement.currentTime = 0;
+            };
+            
             displayMessage(data, false);
         } else {
             console.log("There is a problem:", data);
@@ -33,10 +59,12 @@ window.onload = function() {
     
     
     socket.on('load_old_messages', function (data) {
-        for(var i = data.length - 1; i > 0; i--) {
-            displayMessage(data[i], true);
+        if(data) {
+            for(var i = data.length - 1; i > 0; i--) {
+                displayMessage(data[i], true);
+            }
+            content.innerHTML += "<hr/>";
         }
-        content.innerHTML += "<hr/>";
     });
 
     socket.on('duplicate', function(){
@@ -44,31 +72,28 @@ window.onload = function() {
         socket.emit('newUser', newUser);
     });
 
-    
+    // Everybody gets notified because someone is just coming
     socket.on('newUser', function(_newUser) {
-        //console.log(_newUser, newUser);
-        //if (_newUser !== newUser) {
-            if (Notification && Notification.permission === "granted") {
-                displayNotification('Nouveau venu', _newUser + ' vient d\'arriver dites lui bonjour', 'newUser');
-            } 
-            else if (Notification && Notification.permission !== "denied") {
-                Notification.requestPermission(function (status) {
-                    if (Notification.permission !== status) {
-                      Notification.permission = status;
-                    }
+        if (Notification && Notification.permission === "granted") {
+            displayNotification('Nouveau venu', _newUser + ' vient d\'arriver dites lui bonjour', 'newUser');
+        } 
+        else if (Notification && Notification.permission !== "denied") {
+            Notification.requestPermission(function (status) {
+                if (Notification.permission !== status) {
+                  Notification.permission = status;
+                }
 
-                    // If the user said okay
-                    if (status === "granted") {
-                        displayNotification('Nouveau venu', _newUser + ' vient d\'arriver dites lui bonjour', 'newUser');
-                    }
-                });
-            } 
-        //};
+                // If the user said okay
+                if (status === "granted") {
+                    displayNotification('Nouveau venu', _newUser + ' vient d\'arriver dites lui bonjour', 'newUser');
+                }
+            });
+        }
     });
 
+    // Display the list on users connected
     socket.on('users_list', function(data){
         var html = '';
-        console.log(data.users)
        
         for(var i = 0; i < data.users.length; i++) {
             html += '<li>' + data.users[i] + ' connected at ' + data.datas[i].date + (data.users[i] == newUser ? ' <b>(You)</b>' : '') + ' </li>';
@@ -134,6 +159,7 @@ window.onload = function() {
         } 
     });
 
+    // When user quit the chat everyone get notified
     socket.on('user_leave', function(data){
           if (Notification && Notification.permission === "granted") {
                 displayNotification("Déconnexion", data.username + ' est parti', 'data.username');
@@ -194,33 +220,44 @@ window.onload = function() {
 
         var CSSClass;
 
-        //var regex = new RegExp("^(https?):\/\/+[a-z0-9._-]{2,}\/+[\w\/-]{1,}\.");
         var message = data.message;
 
-        var regex = /^(https?):\/\/+[a-z0-9._-]{2,}\/+[\w\/-]{1,}\.(je?pg|png|gif)/g;
-
+        //var regex = /^(https?):\/\/+[a-z0-9._-]{2,}\/+[\w\/-]{1,}\.(je?pg|png|gif)/g;
+        var regex = /<img /g;
 
         if (isOld === true) {
             CSSClass = "msg-old";
         } else {
             CSSClass = "msg";
         }
+
+        if(regex.test(message)){
+            message = message.replace('src=', 'onclick="toggleSize(this)" src=');
+        }
         
         content.innerHTML += '<span class="' + CSSClass +'"><b>' + username + ': </b>' + message + clock + "</span>";
-        if(regex.test(message)){
-            content.innerHTML += '<br/><img src="' + message + '" width="50" />';
-        }
-
         content.innerHTML += "<br/>";
         
         content.scrollTop = content.scrollHeight;
-
     } /* end diplayMsg function() */
-} /* end diplayMsg function() */
+} /* end window onload function() */
 
 document.querySelector('form').onsubmit = function () {
     return false;
 }
+
+function hasClass(element, className) {
+    return element.className && new RegExp("(^|\\s)" + className + "(\\s|$)").test(element.className);
+}
+
+function toggleSize (evt) {
+    if (evt.className === "active") {
+        evt.className = "";
+    } else {
+        evt.className = "active";
+    }
+}
+
 
 function displayNotification (title, body, tag, img) {
     var n = new Notification(title, 
