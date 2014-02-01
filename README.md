@@ -1,42 +1,26 @@
-SocketIO-Chat
+Chat in realtime with SocketI/O
 =============
-
-#Chat in realtime with socketIO
 
 **jquery isn't allow now**
 
-## Dependencies
+## Dependencies 
 
-* Mongoose js
-* Jade (templating html)
-* Socket IO
-* Markdown js (server side)
+* Mongoosejs (http://mongoosejs.com/index.html)
+* Jade (templating html) (http://jade-lang.com/)
+* Socket IO  (http://socket.io/)
+* Markdown js (server side) (https://github.com/evilstreak/markdown-js)
 
 ## How to run the project
 
 * Fork it then clone it or download the zip
-* npm i(nstall)
-* run a mongodb server (if you don't have it you must download it)
+* type npm i(nstall) in your console
+* run a mongodb server (if you don't have it you must download it) [Download MongoDB](http://www.mongodb.org/downloads)
 * npm index.js
 * run localhost:3700 in your favorite browser
 
-http://flippinawesome.org/2013/09/30/building-multiplayer-games-with-node-js-and-socket-io/
+## Features
+
+* Use HTML5 notifications (https://developer.mozilla.org/en-US/docs/Web/API/notification)
+* Use audio tag (a song is launched when users receive a new message)
 
 
- // send to current request socket client
- socket.emit('message', "this is a test");
-
- // sending to all clients, include sender
- io.sockets.emit('message', "this is a test");
-
- // sending to all clients except sender
- socket.broadcast.emit('message', "this is a test");
-
- // sending to all clients in 'game' room(channel) except sender
- socket.broadcast.to('game').emit('message', 'nice game');
-
-  // sending to all clients in 'game' room(channel), include sender
- io.sockets.in('game').emit('message', 'cool game');
-
- // sending to individual socketid
- io.sockets.socket(socketid).emit('message', 'for your eyes only');
