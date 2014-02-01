@@ -16,7 +16,21 @@ section#content {
 	margin: 0 0 20px 0; 
 	border: solid 1px #999; 
 	overflow-y: scroll;
+	padding-left: 5px;
+}
+
+section#content img {
 	
+	max-width: 90%;
+	height: 10px;
+	cursor: pointer;
+	-webkit-transition: all .7s sease-in;
+    transition: all .7s ease-in;
+}
+
+section#content img.active {
+	height: 100%;
+	margin-left: 15px;
 }
 
 section#chat {
@@ -33,4 +47,60 @@ section#wrapper {
 section#users {
 	width: 200px;
 	display: inline-block;
+}
+
+.send, .input-group{
+	margin-top: 7px;
+}
+
+.msg-old {
+	color: gray;
+	font-style: italic;
+}
+
+hr {
+	margin-top: 30px;
+	margin-bottom: 30px;
+	position: relative;
+}
+
+hr:after {
+	color: rgb(4, 139, 154);
+    content: "New messages";
+    float: right;
+}
+
+
+hr:before {
+    content: "Previous messages";
+    position: absolute;
+    right: 0;
+    top: -20px;
+    color: rgb(4, 139, 154);
+}
+
+span[class^="msg"] p, 
+span[class^="msg"] h1,
+span[class^="msg"] h1,
+span[class^="msg"] h2,
+span[class^="msg"] h3,
+span[class^="msg"] h4,
+span[class^="msg"] h5,
+span[class^="msg"] h6
+{
+	display: inline;
+}
+
+.row{
+	transform: scale(0.7, 0.7);
+	-webkit-transform: scale(0.7, 0.7);
+	opacity: .5;
+	-webkit-transition: all .1s sease-in;
+    transition: all .1s ease-in;
+}
+
+.row.active {
+	opacity: 1;
+	transform: scale(1, 1);
+	-webkit-transform: scale(1, 1);
 }
