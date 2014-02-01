@@ -6,7 +6,8 @@
         "socket.io": "latest",
         "express": "latest",
         "jade": "latest",
-        "mongoose": "latest"
+        "mongoose": "latest",
+        "markdown": "latest"
     },
     "author": "developer"
 }

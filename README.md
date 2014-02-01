@@ -1,7 +1,9 @@
 SocketIO-Chat
 =============
 
-Socket IO test | Creating a little chat
+#Chat in realtime with socketIO
+
+**jquery isn't allow now**
 
 http://flippinawesome.org/2013/09/30/building-multiplayer-games-with-node-js-and-socket-io/
 

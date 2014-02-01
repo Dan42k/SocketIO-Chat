@@ -1,6 +1,8 @@
 var express = require("express");
 var app = express();
 var port = 3700;
+
+var markdown = require( "markdown" ).markdown;
  
 app.set('views', __dirname + '/tpl');
 app.set('view engine', "jade");
@@ -31,25 +33,52 @@ var chatSchema = mongoose.Schema({
     }
 });
 
+
 var Message = mongoose.model('Message', chatSchema);
  
 var io = require('socket.io').listen(app.listen(port));
 io.sockets.on('connection', function (socket) {
 
 	socket.on('old', function () {
-		Message.find({}).limit(7).exec( function(err, data){
+		var query = Message.find({}).sort({'createdAt': -1});
+		query.limit(7).exec( function(err, data){
 	    		if(err) throw err;
-	    		socket.emit('load_old_messages', data);
+	    		var datas = [];
+	    		for (var i = 0; i < data.length; i++) {
+	    			var object = {
+		    			username: data[i].username,
+		    			message: markdown.toHTML(data[i].message),
+		    			createdAt: data[i].createdAt
+		    		}
+		    		datas.push(object);
+	    		};
+
+	    		socket.emit('load_old_messages', datas);
 	    });
     });
 
-    socket.emit('message', { message: 'welcome to the chat' });
+    var messageFromServer = {
+    	message: 'welcome to the chat',
+    	createdAt: new Date()
+    }
+
+    socket.emit('message', messageFromServer);
+    
 
     socket.on('send', function (data) {
     	var newMessage = new Message({ username: data.username, message: data.message  });
-    	newMessage.save();
+    	newMessage.save(function (err) {
+		  if (err) // ...
+		  throw err;
+		});
     	//console.log(data);
-        io.sockets.emit('message', data);
+    	var datas = {
+			username: data.username,
+			message: markdown.toHTML(data.message),
+			createdAt: data.createdAt
+		}
+    	//console.log( markdown.toHTML( data[0].message ) )
+        io.sockets.emit('message', datas);
     }); 
 
     socket.on('newUser', function(data) {
@@ -137,7 +166,7 @@ io.sockets.on('connection', function (socket) {
 		socket.emit('are', socket.pseudo);
 	});
 
-	
+
 }); 
 
 console.log("Listening on port " + port);

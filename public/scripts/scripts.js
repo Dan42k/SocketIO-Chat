@@ -5,54 +5,38 @@ window.onload = function() {
     var field = document.querySelector(".field");
     var sendButton = document.querySelector(".send");
     var privateButton = document.querySelector(".private");
+    var section = document.querySelector("section.row");
     var content = document.getElementById("content");
 
     var usersList = document.getElementById("users-list");
 
     var usersSelect = document.querySelector(".users-select");
 
-    var newUser = prompt('Quel est votre pseudo ?');
+    var newUser = prompt('Choose your username');
+    while(newUser == undefined) {
+        newUser = prompt('Choose your username');
+    }
+
+    section.className = section.className + " active";
     socket.emit('newUser', newUser);
 
     socket.emit('old');
  
     socket.on('message', function (data) {
-        console.log(data);
-        if(data.message) {
-           messages.push(data);
-            var html = '';
-            var username;
-            var hours;
-            for(var i = 0; i < messages.length; i++) {
-                username =  (messages[i].username ? messages[i].username : 'Server');
-                hours =  (messages[i].hours ? ' (' + messages[i].hours + ')' : '');
-
-                //html += '<b>' + username + ': </b>';
-               // html += messages[i].message + hours + '<br />';
-                displayMsg(data, false);
-            }
-            //content.innerHTML = html;
+        //console.log(data);
+        if(data) {
+            displayMessage(data, false);
         } else {
             console.log("There is a problem:", data);
         }
     });
-
+    
+    
     socket.on('load_old_messages', function (data) {
-            console.log(data);
-            //messages.push(data);
-            var html = '';
-            var username;
-            var hours;
-            for(var i = 0; i < data.length; i++) {
-                username =  (data[i].username ? data[i].username : 'Server');
-                hours =  (data[i].hours ? ' (' + data[i].hours + ')' : '');
-
-                /*html += '<b>' + username + ': </b>';
-                html += data[i].message + hours + '<br />';*/
-                displayMsg(data[i], true);
-            }
-            //content.innerHTML = html;
-        
+        for(var i = data.length - 1; i > 0; i--) {
+            displayMessage(data[i], true);
+        }
+        content.innerHTML += "<hr/>";
     });
 
     socket.on('duplicate', function(){
@@ -122,8 +106,19 @@ window.onload = function() {
         var receiver = data.to,
         sender = (data.from !== data.to ? data.from : 'Me');
 
+        var time =  new Date(data.createdAt);
+        var hours   = time.getHours();
+
+        var minutes = time.getMinutes();
+        minutes     = ((minutes < 10) ? "0" : "") + minutes;
+
+        var seconds = time.getSeconds();
+        seconds     = ((seconds < 10) ? "0" : "") + seconds;
+
+        var clock   = hours + ":" + minutes + ":" + seconds;
+
         if (Notification && Notification.permission === "granted") {
-            displayNotification('Private message from ' + sender + ' at ' + data.hours, data.content, data.content);
+            displayNotification('Private message from ' + sender + ' at ' + clock, data.content, data.content);
         } 
         else if (Notification && Notification.permission !== "denied") {
             Notification.requestPermission(function (status) {
@@ -133,7 +128,7 @@ window.onload = function() {
 
                 // If the user said okay
                 if (status === "granted") {
-                    displayNotification('Private message from ' + sender + ' at ' + data.hours, data.content, data.content);
+                    displayNotification('Private message from ' + sender + ' at ' + clock, data.content, data.content);
                 }
             });
         } 
@@ -170,45 +165,58 @@ window.onload = function() {
         if (text === '') return;
         var privateMessageReceiver = usersSelect.options[usersSelect.selectedIndex].value;
 
-        var demain  = new Date();
-        var time    = new Date();
+        var time  = new Date();
+
+        if (privateMessageReceiver) {
+            socket.emit('private_message', { to: privateMessageReceiver, content: text, from: newUser, createdAt: time });
+        } else {
+            socket.emit('send', { message: text, username: newUser, createdAt: time });
+        }
+        field.value = '';
+    };
+
+    function displayMessage(data, isOld){
+        var username;
+
+        username =  (data.username ? data.username : 'Server');
+        username =  (username === newUser ? username + ' (You)' : username);
+
+        var time =  new Date(data.createdAt);
         var hours   = time.getHours();
 
         var minutes = time.getMinutes();
         minutes     = ((minutes < 10) ? "0" : "") + minutes;
-
+ 
         var seconds = time.getSeconds();
         seconds     = ((seconds < 10) ? "0" : "") + seconds;
 
-        var clock   = hours + ":" + minutes + ":" + seconds;
+        var clock   = ' (' + hours + ":" + minutes + ":" + seconds + ')';
+
+        var CSSClass;
+
+        //var regex = new RegExp("^(https?):\/\/+[a-z0-9._-]{2,}\/+[\w\/-]{1,}\.");
+        var message = data.message;
+
+        var regex = /^(https?):\/\/+[a-z0-9._-]{2,}\/+[\w\/-]{1,}\.(je?pg|png|gif)/g;
 
 
-        if (privateMessageReceiver) {
-            socket.emit('private_message', { to: privateMessageReceiver, content: text, from: newUser, hours: clock });
-        } else {
-            socket.emit('send', { message: text, username: newUser, hours: clock });
-        }
-        //var text = field.value;
-        //socket.emit('private_message', { to: 'doge', content: 'master', from: newUser });
-        //L'utilisateur émet un message
-        //socket.emit('send', { message: text, username: newUser });
-        //socket.emit('userinfo_request');
-        //socket.emit('change_name', 'dogemaster');
-
-/*        socket.get('date', function (error, data) {
-           console.log(data);
-        });*/
-        field.value = '';
-    };
-
-    function displayMsg(data, isOld){
         if (isOld === true) {
-            content.innerHTML += '<span class="msg-old"><b>' + data.username + ': </b>' + data.message + "</span><br/>";
+            CSSClass = "msg-old";
         } else {
-            content.innerHTML += '<span class="msg"><b>' + data.username + ': </b>' + data.message + "</span><br/>";
+            CSSClass = "msg";
         }
-    }
-}
+        
+        content.innerHTML += '<span class="' + CSSClass +'"><b>' + username + ': </b>' + message + clock + "</span>";
+        if(regex.test(message)){
+            content.innerHTML += '<br/><img src="' + message + '" width="50" />';
+        }
+
+        content.innerHTML += "<br/>";
+        
+        content.scrollTop = content.scrollHeight;
+
+    } /* end diplayMsg function() */
+} /* end diplayMsg function() */
 
 document.querySelector('form').onsubmit = function () {
     return false;
