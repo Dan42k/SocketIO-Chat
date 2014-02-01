@@ -37,23 +37,24 @@ var chatSchema = mongoose.Schema({
 var Message = mongoose.model('Message', chatSchema);
  
 var io = require('socket.io').listen(app.listen(port));
+
 io.sockets.on('connection', function (socket) {
 
 	socket.on('old', function () {
 		var query = Message.find({}).sort({'createdAt': -1});
 		query.limit(7).exec( function(err, data){
-	    		if(err) throw err;
-	    		var datas = [];
-	    		for (var i = 0; i < data.length; i++) {
-	    			var object = {
-		    			username: data[i].username,
-		    			message: markdown.toHTML(data[i].message),
-		    			createdAt: data[i].createdAt
-		    		}
-		    		datas.push(object);
-	    		};
+    		if(err) throw err;
+    		var datas = [];
+    		for (var i = 0; i < data.length; i++) {
+    			var object = {
+	    			username: data[i].username,
+	    			message: markdown.toHTML(data[i].message),
+	    			createdAt: data[i].createdAt
+	    		}
+	    		datas.push(object);
+    		};
 
-	    		socket.emit('load_old_messages', datas);
+    		socket.emit('load_old_messages', datas);
 	    });
     });
 
@@ -112,21 +113,13 @@ io.sockets.on('connection', function (socket) {
 
 	    	socket.pseudo = newUser;
 	    	socket.object = object;
-	    	//socket.doge = 'doge';
 
 	    	usersData.push(object);
 
 	    	//socket.pseudo
 	    	//users[socket] = object;
 	    	users[socket.pseudo] = socket;
-	    	//users[socket.pseudo] = socket;
 
-	    	//users[date] = socket;
-
-	    	console.log(
-	    		 Object.keys(users)
-	    	);
-	    	//io.sockets.emit('users_list', Object.keys(users));
 	    	io.sockets.emit('users_list', {
 	    									users: Object.keys(users),
 	    									datas: usersData
@@ -150,10 +143,10 @@ io.sockets.on('connection', function (socket) {
 		
 		var userDisconnected = socket.pseudo;
 	    socket.broadcast.emit('user_leave', { username: userDisconnected });
-
-	    //console.log('DOGE ', socket.date);
 		delete users[socket.pseudo];
-		io.sockets.emit('users_list', Object.keys(users));
+		io.sockets.emit('users_list', { users: Object.keys(users),
+										datas: usersData
+						});
 	}); 
 
 	socket.on('private_message', function(data) {
@@ -165,8 +158,6 @@ io.sockets.on('connection', function (socket) {
 		if(!socket.pseudo) return;
 		socket.emit('are', socket.pseudo);
 	});
-
-
 }); 
 
 console.log("Listening on port " + port);

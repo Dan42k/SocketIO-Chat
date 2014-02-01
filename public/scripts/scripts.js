@@ -8,12 +8,7 @@ window.onload = function() {
 
     window.onblur = function () { 
       isActive = false; 
-    }; 
-
-    // test
-    setInterval(function () { 
-      //console.log(isActive ? 'active' : 'inactive');
-    }, 1000);
+    };
  
     var messages = [];
     var socket = io.connect('http://127.0.0.1:3700');
@@ -44,8 +39,7 @@ window.onload = function() {
     socket.on('message', function (data) {
         //console.log(isActive ? 'active' : 'inactive'); 
         if(data) {
-            console.log(isActive);
-            //All users except sender get a sound notification
+            //All users (not on this tab) except sender get a sound notification
             if (data.username && data.username !== newUser && !isActive) {
                 audioElement.play();
                 audioElement.currentTime = 0;
