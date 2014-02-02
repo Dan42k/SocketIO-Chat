@@ -23,4 +23,3 @@ Chat in realtime with SocketI/O
 * Use HTML5 notifications (https://developer.mozilla.org/en-US/docs/Web/API/notification)
 * Use audio tag (a song is launched when users receive a new message)
 
-
