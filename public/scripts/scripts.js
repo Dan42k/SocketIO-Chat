@@ -4,11 +4,11 @@ window.onload = function() {
 
     window.onfocus = function () { 
       isActive = true; 
-    }; 
+    };  
 
     window.onblur = function () { 
       isActive = false; 
-    };
+    }; 
  
     var messages = [];
     var socket = io.connect('http://127.0.0.1:3700');
@@ -28,6 +28,8 @@ window.onload = function() {
     while(newUser == undefined) {
         newUser = prompt('Choose your username');
     }
+
+    var sendedTo = [];
 
 
     section.className = section.className + " active";
@@ -117,10 +119,10 @@ window.onload = function() {
         console.log(data);
     });
 
-    socket.on('send_message', function(data){
+    socket.on('receive_pm', function(data){
         // console.log(data.to, newUser);
        // if(data.to == newUser) {
-            console.log('PRIVATE ', data.to, data.from);
+        console.log('PRIVATE ', data.to, data.from, data);
         //}
         var receiver = data.to,
         sender = (data.from !== data.to ? data.from : 'Me');
@@ -136,6 +138,8 @@ window.onload = function() {
 
         var clock   = hours + ":" + minutes + ":" + seconds;
 
+        
+
         if (Notification && Notification.permission === "granted") {
             displayNotification('Private message from ' + sender + ' at ' + clock, data.content, data.content);
         } 
@@ -150,7 +154,9 @@ window.onload = function() {
                     displayNotification('Private message from ' + sender + ' at ' + clock, data.content, data.content);
                 }
             });
-        } 
+        }
+
+        displayMessage(data, false, true);
     });
 
     // When user quit the chat everyone get notified
@@ -173,12 +179,7 @@ window.onload = function() {
 
     socket.on('new', function(message) {
         console.log(message);
-    })
-
-    privateButton.onclick = function() {
-        console.log('private_message');
-        //socket.emit('private_message', { to: 'doge', content: 'master', from: newUser });
-    };
+    });
 
     sendButton.onclick = function() {
         var text = field.value;
@@ -188,14 +189,14 @@ window.onload = function() {
         var time  = new Date();
 
         if (privateMessageReceiver) {
-            socket.emit('private_message', { to: privateMessageReceiver, content: text, from: newUser, createdAt: time });
+            socket.emit('private_message', { to: privateMessageReceiver, message: text, from: newUser, createdAt: time });
         } else {
             socket.emit('send', { message: text, username: newUser, createdAt: time });
         }
         field.value = '';
     };
 
-    function displayMessage(data, isOld){
+    function displayMessage(data, isOld, isPrivate){
         var username;
 
         username =  (data.username ? data.username : 'Server');
@@ -217,6 +218,8 @@ window.onload = function() {
         var message = data.message;
 
         //var regex = /^(https?):\/\/+[a-z0-9._-]{2,}\/+[\w\/-]{1,}\.(je?pg|png|gif)/g;
+
+        //Message contains a img tag
         var regex = /<img /g;
 
         if (isOld === true) {
@@ -228,9 +231,24 @@ window.onload = function() {
         if(regex.test(message)){
             message = message.replace('src=', 'onclick="toggleSize(this)" src=');
         }
+
+        // Message is private
+        if (isPrivate) {
+            // Special display for sender
+            if (newUser === data.from) {
+                if (data.to === data.from) {
+                    content.innerHTML += '<span style="background-color:' + data.bgColor + '" class="' + CSSClass +' private"><b>You to You: </b>' + message + clock;
+                } else {
+                    content.innerHTML += '<span style="background-color:' + data.bgColor + '" class="' + CSSClass +' private"><b>You to ' + data.to + ': </b>' + message + clock;
+                }
+            } else {
+                content.innerHTML += '<span style="background-color:' + data.bgColor + '" class="' + CSSClass +' private"><b>' + data.from + ' to You: </b>' + message + clock;
+            }
+        } else {
+            content.innerHTML += '<span class="' + CSSClass +'"><b>' + username + ': </b>' + message + clock;
+        }
         
-        content.innerHTML += '<span class="' + CSSClass +'"><b>' + username + ': </b>' + message + clock + "</span>";
-        content.innerHTML += "<br/>";
+        content.innerHTML += "<br/></span>";
         
         content.scrollTop = content.scrollHeight;
     } /* end diplayMsg function() */

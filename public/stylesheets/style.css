@@ -20,10 +20,10 @@ section#content {
 }
 
 section#content img {
-	
 	max-width: 90%;
 	height: 10px;
 	cursor: pointer;
+
 	-webkit-transition: all .7s sease-in;
     transition: all .7s ease-in;
 }
@@ -31,6 +31,7 @@ section#content img {
 section#content img.active {
 	height: 100%;
 	margin-left: 15px;
+
 }
 
 section#chat {
@@ -72,7 +73,7 @@ hr:after {
 
 
 hr:before {
-    content: "Previous messages";
+    content: "Old messages";
     position: absolute;
     right: 0;
     top: -20px;
@@ -91,12 +92,20 @@ span[class^="msg"] h6
 	display: inline;
 }
 
+span.private {
+    display: inline-block;
+    padding: 2px;
+    width: 100%;
+}
+
 .row{
 	transform: scale(0.7, 0.7);
 	-webkit-transform: scale(0.7, 0.7);
-	opacity: .5;
+	
 	-webkit-transition: all .1s sease-in;
     transition: all .1s ease-in;
+	
+	opacity: .5;
 }
 
 .row.active {
