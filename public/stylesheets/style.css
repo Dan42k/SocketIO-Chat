@@ -80,16 +80,21 @@ hr:before {
     color: rgb(4, 139, 154);
 }
 
-span[class^="msg"] p, 
-span[class^="msg"] h1,
-span[class^="msg"] h1,
-span[class^="msg"] h2,
-span[class^="msg"] h3,
-span[class^="msg"] h4,
-span[class^="msg"] h5,
-span[class^="msg"] h6
+span[class*="msg"] p, 
+span[class*="msg"] h1,
+span[class*="msg"] h1,
+span[class*="msg"] h2,
+span[class*="msg"] h3,
+span[class*="msg"] h4,
+span[class*="msg"] h5,
+span[class*="msg"] h6
 {
 	display: inline;
+}
+
+span.msg.new{
+	animation: anim-messages .5s;
+	-webkit-animation: anim-messages .5s; /* Safari and Chrome */
 }
 
 span.private {
@@ -101,7 +106,7 @@ span.private {
 .row{
 	transform: scale(0.7, 0.7);
 	-webkit-transform: scale(0.7, 0.7);
-	
+
 	-webkit-transition: all .1s sease-in;
     transition: all .1s ease-in;
 	
@@ -112,4 +117,27 @@ span.private {
 	opacity: 1;
 	transform: scale(1, 1);
 	-webkit-transform: scale(1, 1);
+}
+
+
+@keyframes anim-messages
+{
+	from {
+		margin-left: 100px;
+		opacity: .5;
+	} to {
+		margin-left: 0px;
+		opacity: 1;
+	}
+}
+
+@-webkit-keyframes anim-messages /* Safari and Chrome */
+{
+	from {
+		margin-left: 100px;
+		opacity: .5;
+	} to {
+		margin-left: 0px;
+		opacity: 1;
+	}
 }

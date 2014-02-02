@@ -30,7 +30,7 @@ window.onload = function() {
     }
 
     var sendedTo = [];
-
+    var color = [];
 
     section.className = section.className + " active";
     socket.emit('newUser', newUser);
@@ -189,7 +189,21 @@ window.onload = function() {
         var time  = new Date();
 
         if (privateMessageReceiver) {
-            socket.emit('private_message', { to: privateMessageReceiver, message: text, from: newUser, createdAt: time });
+            var color1 = (Math.floor((Math.random()*222)+33).toString(16));
+            var color2 = (Math.floor((Math.random()*222)+33).toString(16));
+            var color3 = (Math.floor((Math.random()*222)+33).toString(16));
+           //var colorToMessage;
+            //console.log('ok');
+            if (sendedTo.indexOf(privateMessageReceiver) === -1) {
+                sendedTo.push(privateMessageReceiver);
+
+                var colour = '#' + String(color1) + String(color2) + String(color3);
+                color.push(colour);
+            } 
+
+            var colorToMessage = color[sendedTo.indexOf(privateMessageReceiver)];
+
+            socket.emit('private_message', { to: privateMessageReceiver, message: text, from: newUser, createdAt: time, color: colorToMessage });
         } else {
             socket.emit('send', { message: text, username: newUser, createdAt: time });
         }
@@ -222,7 +236,7 @@ window.onload = function() {
         //Message contains a img tag
         var regex = /<img /g;
 
-        if (isOld === true) {
+        if (isOld) {
             CSSClass = "msg-old";
         } else {
             CSSClass = "msg";
@@ -245,10 +259,23 @@ window.onload = function() {
                 content.innerHTML += '<span style="background-color:' + data.bgColor + '" class="' + CSSClass +' private"><b>' + data.from + ' to You: </b>' + message + clock;
             }
         } else {
-            content.innerHTML += '<span class="' + CSSClass +'"><b>' + username + ': </b>' + message + clock;
+            if (isOld) {
+                content.innerHTML += '<span class="' + CSSClass +'"><b>' + username + ': </b>' + message + clock;
+            } else {
+                content.innerHTML += '<span class="new ' + CSSClass +'"><b>' + username + ': </b>' + message + clock;
+            }
         }
         
         content.innerHTML += "<br/></span>";
+
+        if (!isOld && !isPrivate) {
+            setTimeout(function(){
+                var spanLists = content.getElementsByTagName("span");
+
+                spanLists[spanLists.length-1].className = '';
+                spanLists[spanLists.length-1].className = CSSClass;
+            }, 700);
+        }        
         
         content.scrollTop = content.scrollHeight;
     } /* end diplayMsg function() */

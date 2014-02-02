@@ -156,14 +156,14 @@ io.sockets.on('connection', function (socket) {
 
     socket.on('private_message', function(data) {
         if(!users[data.to]) return;
-        var color = users[data.to].object.color
+
         var datas = {
             to: data.to,
             from: data.from,
             message: markdown.toHTML(data.message),
             content: data.message,
             createdAt: data.createdAt,
-            bgColor: color
+            bgColor: data.color
         }
 
         if (users[data.to] !== users[data.from]) {
