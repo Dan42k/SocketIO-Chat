@@ -156,6 +156,11 @@ window.onload = function() {
             });
         }
 
+        if (sendedTo.indexOf(data.from) === -1) {
+                sendedTo.push(data.from);
+                color.push(data.bgColor);
+            } 
+
         displayMessage(data, false, true);
     });
 
