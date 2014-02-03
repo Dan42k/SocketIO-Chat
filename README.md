@@ -2,6 +2,7 @@ Chat in realtime with SocketI/O
 =============
 
 **jquery isn't allow now**
+** Tested on MacOS and Windows ***
 
 ## Dependencies 
 
@@ -15,7 +16,7 @@ Chat in realtime with SocketI/O
 * Fork it then clone it or download the zip
 * type npm i(nstall) in your console
 * run a mongodb server (if you don't have it you must download it) [Download MongoDB](http://www.mongodb.org/downloads)
-* npm index.js
+* node(mon) index.js
 * run localhost:3700 in your favorite browser
 
 ## Features

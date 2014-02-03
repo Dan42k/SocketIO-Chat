@@ -1,37 +1,49 @@
 window.onload = function() {
 
+    
     var isActive;
+    var isTyping;
 
     window.onfocus = function () { 
       isActive = true; 
     };  
 
     window.onblur = function () { 
-      isActive = false; 
-    }; 
- 
-    var messages = [];
-    var socket = io.connect('http://127.0.0.1:3700');
-    var field = document.querySelector(".field");
-    var sendButton = document.querySelector(".send");
+      isActive = true; 
+    };
+
+    
+
+    //checkChecking();
+
+    var messages      = [];
+    var socket        = io.connect('http://127.0.0.1:3700');
+    var field         = document.querySelector(".field");
+    var sendButton    = document.querySelector(".send");
     var privateButton = document.querySelector(".private");
-    var section = document.querySelector("section.row");
+    var section       = document.querySelector("section.row");
     
-    var content = document.getElementById("content");
-
-    var usersList = document.getElementById("users-list");
-    var usersSelect = document.querySelector(".users-select");
-
-    var audioElement = document.querySelector("audio");
+    var content       = document.getElementById("content");
+    var typing        = document.getElementsByClassName("typing")[0];
     
-    var newUser = prompt('Choose your username');
-    while(newUser == undefined) {
+    var usersList     = document.getElementById("users-list");
+    var usersSelect   = document.querySelector(".users-select");
+    
+    var input         = document.getElementsByTagName("input")[0];
+    
+    var audioElement  = document.querySelector("audio");
+    
+    var newUser       = prompt('Choose your username');
+    while(newUser === undefined) {
         newUser = prompt('Choose your username');
     }
 
-    var sendedTo = [];
+
+    //Contains list of  previous receivers
+    var sendedTo = []; 
     var color = [];
 
+    //Create a little animation chat container
     section.className = section.className + " active";
     socket.emit('newUser', newUser);
 
@@ -52,6 +64,36 @@ window.onload = function() {
             console.log("There is a problem:", data);
         }
     });
+
+    var myVar = setInterval(
+                    function(){
+                        checkChecking();
+                    }, 1000);
+
+    function checkChecking() {
+        input.onfocus = function () { 
+          isTyping = true;
+        };  
+
+        input.onblur = function () { 
+          isTyping = false;
+        };
+
+        socket.emit('typing', { isTyping: isTyping, username: newUser});
+    }
+
+    socket.on('is_typing', function(data){
+        var html = '';
+
+        if(data.length) {
+            for(var i = 0; i < data.length; i++) {
+                html += data[i] + ' is typing | ';
+            } 
+        }
+        typing.innerHTML = html;
+    }); 
+
+     
     
     
     socket.on('load_old_messages', function (data) {
@@ -60,7 +102,7 @@ window.onload = function() {
                 displayMessage(data[i], true);
             }
             content.innerHTML += "<hr/>";
-        }
+        } 
     });
 
     socket.on('duplicate', function(){
@@ -71,7 +113,7 @@ window.onload = function() {
     // Everybody gets notified because someone is just coming
     socket.on('newUser', function(_newUser) {
         if (Notification && Notification.permission === "granted") {
-            displayNotification('Nouveau venu', _newUser + ' vient d\'arriver dites lui bonjour', 'newUser');
+            displayNotification('Nouveau venu', _newUser + ' vient d\'arriver dites lui bonjour', 'newUser', true);
         } 
         else if (Notification && Notification.permission !== "denied") {
             Notification.requestPermission(function (status) {
@@ -81,7 +123,7 @@ window.onload = function() {
 
                 // If the user said okay
                 if (status === "granted") {
-                    displayNotification('Nouveau venu', _newUser + ' vient d\'arriver dites lui bonjour', 'newUser');
+                    displayNotification('Nouveau venu', _newUser + ' vient d\'arriver dites lui bonjour', 'newUser', true);
                 }
             });
         }
@@ -122,6 +164,7 @@ window.onload = function() {
     socket.on('receive_pm', function(data){
         // console.log(data.to, newUser);
        // if(data.to == newUser) {
+
         console.log('PRIVATE ', data.to, data.from, data);
         //}
         var receiver = data.to,
@@ -138,10 +181,8 @@ window.onload = function() {
 
         var clock   = hours + ":" + minutes + ":" + seconds;
 
-        
-
         if (Notification && Notification.permission === "granted") {
-            displayNotification('Private message from ' + sender + ' at ' + clock, data.content, data.content);
+            displayNotification('Private message from ' + sender + ' at ' + clock, data.content, data.content, isActive);
         } 
         else if (Notification && Notification.permission !== "denied") {
             Notification.requestPermission(function (status) {
@@ -151,15 +192,16 @@ window.onload = function() {
 
                 // If the user said okay
                 if (status === "granted") {
-                    displayNotification('Private message from ' + sender + ' at ' + clock, data.content, data.content);
+                    displayNotification('Private message from ' + sender + ' at ' + clock, data.content, data.content, isActive);
                 }
             });
         }
 
+        // Receiver gets the color of the sender
         if (sendedTo.indexOf(data.from) === -1) {
-                sendedTo.push(data.from);
-                color.push(data.bgColor);
-            } 
+            sendedTo.push(data.from);
+            color.push(data.bgColor);
+        } 
 
         displayMessage(data, false, true);
     });
@@ -167,7 +209,7 @@ window.onload = function() {
     // When user quit the chat everyone get notified
     socket.on('user_leave', function(data){
           if (Notification && Notification.permission === "granted") {
-                displayNotification("Déconnexion", data.username + ' est parti', 'data.username');
+                displayNotification("Déconnexion", data.username + ' est parti', 'data.username', isActive);
             } 
             else if (Notification && Notification.permission !== "denied") {
                 Notification.requestPermission(function (status) {
@@ -176,7 +218,7 @@ window.onload = function() {
                     }
                     // If the user said okay
                     if (status === "granted") {
-                      displayNotification("Déconnexion", data.username + ' est parti', 'data.username');
+                      displayNotification("Déconnexion", data.username + ' est parti', 'data.username', isActive);
                     }
                 });
             }
@@ -197,8 +239,7 @@ window.onload = function() {
             var color1 = (Math.floor((Math.random()*222)+33).toString(16));
             var color2 = (Math.floor((Math.random()*222)+33).toString(16));
             var color3 = (Math.floor((Math.random()*222)+33).toString(16));
-           //var colorToMessage;
-            //console.log('ok');
+
             if (sendedTo.indexOf(privateMessageReceiver) === -1) {
                 sendedTo.push(privateMessageReceiver);
 
@@ -251,17 +292,19 @@ window.onload = function() {
             message = message.replace('src=', 'onclick="toggleSize(this)" src=');
         }
 
+        
         // Message is private
         if (isPrivate) {
+            var borderColor = invertColor(data.bgColor);
             // Special display for sender
             if (newUser === data.from) {
                 if (data.to === data.from) {
-                    content.innerHTML += '<span style="background-color:' + data.bgColor + '" class="' + CSSClass +' private"><b>You to You: </b>' + message + clock;
+                    content.innerHTML += '<span style="background-color:' + data.bgColor + '; border-left: 2px solid ' + borderColor + '" class="' + CSSClass +' private"><b>You to You: </b>' + message + clock;
                 } else {
-                    content.innerHTML += '<span style="background-color:' + data.bgColor + '" class="' + CSSClass +' private"><b>You to ' + data.to + ': </b>' + message + clock;
+                    content.innerHTML += '<span style="background-color:' + data.bgColor + '; border-left: 2px solid ' + borderColor + '" class="' + CSSClass +' private"><b>You to ' + data.to + ': </b>' + message + clock;
                 }
             } else {
-                content.innerHTML += '<span style="background-color:' + data.bgColor + '" class="' + CSSClass +' private"><b>' + data.from + ' to You: </b>' + message + clock;
+                content.innerHTML += '<span style="background-color:' + data.bgColor + '; border-left: 2px solid ' + borderColor + '" class="' + CSSClass +' private"><b>' + data.from + ' to You: </b>' + message + clock;
             }
         } else {
             if (isOld) {
@@ -302,12 +345,30 @@ function toggleSize (evt) {
     }
 }
 
+function invertColor(hexTripletColor) {
+   var color = hexTripletColor;
+    color = color.substring(1);           // remove #
+    console.log(hexTripletColor);
+    color = parseInt(color, 16);          // convert to integer
+    color = 0xFFFFFF ^ color;             // invert three bytes
+    color = color.toString(16);           // convert to hex
+    color = ("000000" + color).slice(-6); // pad with leading zeros
+    color = "#" + color;                  // prepend #
+    return color;
+}
 
-function displayNotification (title, body, tag, img) {
-    var n = new Notification(title, 
+
+function displayNotification (title, body, tag, img, isActive) {
+    //var for users who don't want to be annoyed by notifications
+    var WANT_TO_BE_ANNOYED_BY_NOTIFICATIONS = false; 
+
+    if(WANT_TO_BE_ANNOYED_BY_NOTIFICATIONS && !isActive){
+        var n = new Notification(title, 
                                 {
                                     tag: tag,
                                     body: body
                                 }
                             );
+    }
+    
 }

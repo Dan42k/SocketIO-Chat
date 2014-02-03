@@ -21,7 +21,7 @@ app.use(express.static(__dirname + '/public'));
 
 var users = {};
 var usersData = [];
-
+var usersTyping = [];
 
 var mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost/chat');
@@ -39,7 +39,6 @@ var Message = mongoose.model('Message', chatSchema);
 var io = require('socket.io').listen(app.listen(port));
 
 io.sockets.on('connection', function (socket) {
-
     socket.on('old', function () {
         var query = Message.find({}).sort({'createdAt': -1});
         query.limit(7).exec( function(err, data){
@@ -177,6 +176,27 @@ io.sockets.on('connection', function (socket) {
         if(!socket.pseudo) return;
         socket.emit('are', socket.pseudo);
     });
+
+    socket.on('typing', function(data){
+        if (usersTyping.indexOf(data.username) === -1) {
+            if (data.isTyping) {
+                usersTyping.push(data.username);
+            }
+        } else if (usersTyping.indexOf(data.username) !== -1 ) {
+            if(!data.isTyping) {
+                usersTyping.splice(usersTyping.indexOf(data.username), 1);
+            } 
+        };
+        console.log(usersTyping);
+        io.sockets.emit('is_typing', usersTyping);
+    });
+
+/*    socket.on('not_typing', function(data){
+        if (usersTyping.indexOf(data.username) !== -1) {
+            usersTyping.splice(usersTyping.indexOf(data.username), 1);
+        };
+        io.sockets.emit('is_not_typing', usersTyping);
+    }); */
 }); 
 
 console.log("Listening on port " + port);
